@@ -17,7 +17,10 @@ for ((nyhetsnr=1; nyhetsnr <= 100; nyhetsnr++ )); do
     echo "NRK nyheter"; date -d $tidspunkt
     echo -e "\n$overskrift\n" | tr -d '"'
     echo -e "$tekst\n" | tr -d '"'
-    kitty +kitten icat --align left $bilde &> /dev/null
+    #### Hvis man har kitty, så får man graphics
+        if [ -n "$KITTY_WINDOW_ID" ]; then
+            kitty +kitten icat --align left $bilde &> /dev/null
+        fi
     echo -e "Kilde: $lenke\n" | tr -d '"'
 
     sleep 30
