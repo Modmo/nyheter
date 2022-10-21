@@ -1,0 +1,26 @@
+#!/bin/bash
+
+curl -s https://www.nrk.no/toppsaker.rss -o /tmp/toppsaker
+
+nyhetssak() {
+for ((nyhetsnr=1; nyhetsnr <= 100; nyhetsnr++ )); do
+    overskrift=$(xq '.rss.channel.item[].title' /tmp/toppsaker | awk "NR==$nyhetsnr")
+    #kategori=$(xq '.rss.channel.item[].category' /tmp/toppsaker | awk "NR==$nyhetsnr")
+    tekst=$(xq '.rss.channel.item[].description' /tmp/toppsaker | awk "NR==$nyhetsnr")
+    lenke=$(xq '.rss.channel.item[].link' /tmp/toppsaker | awk "NR==$nyhetsnr")
+    tidspunkt=$(xq -r '.rss.channel.item[]."dc:date"' /tmp/toppsaker | awk "NR==$nyhetsnr" | tr -d ',')
+    bilde=$(xq -r '.rss.channel.item[]."media:content"."@url"' /tmp/toppsaker | awk "NR==$nyhetsnr")
+  
+    echo "NRK nyheter"; date -d $tidspunkt
+    echo -e "\n$overskrift\n" | tr -d '"'
+    echo -e "$tekst\n" | tr -d '"'
+    kitty +kitten icat --align left $bilde &> /dev/null
+    echo -e "Kilde: $lenke\n" | tr -d '"'
+
+    sleep 30
+done
+}
+
+while true; do
+    nyhetssak
+done
