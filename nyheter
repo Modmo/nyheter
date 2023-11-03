@@ -48,7 +48,7 @@ else
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
 fi
 
-    sleep 1
+    sleep 30
 
 rm /tmp/breakingnews
 }
@@ -74,7 +74,7 @@ fi
         fi
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
 
-    sleep 1
+    sleep 30
 done
 
 
