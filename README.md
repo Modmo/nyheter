@@ -4,7 +4,7 @@ Gets news from NRK with rss api
 Loops through the most recent 100 top news, then restarts.
 
 ## Requirements
-yq curl
+xq curl
 
 ## Optional
 kitty
