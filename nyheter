@@ -22,18 +22,20 @@ breakingnews() {
 curl -s https://www.nrk.no/nyheter/siste.rss -o /tmp/breakingnews
 
 #get nyhetsnr
-nyhetsnr=$((RANDOM % 10))
+nyhetsnr1=$((RANDOM % 10))
 
 #### Henter div informasjon fra rss XML
-    overskrift=$(xq -x //item[$nyhetsnr]/title /tmp/breakingnews) #| awk "NR==$nyhetsnr")
-    kategori=$(xq -x //item[$nyhetsnr]/category /tmp/breakingnews) #| awk "NR==$nyhetsnr")
-    tekst=$(xq -x //item[$nyhetsnr]/description /tmp/breakingnews) #| awk "NR==$nyhetsnr")
-    lenke=$(xq -x //item[$nyhetsnr]/link /tmp/breakingnews) #| awk "NR==$nyhetsnr")
-    tidspunkt=$(xq -x //item[$nyhetsnr]/dc:date /tmp/breakingnews | tr -d ',') #| awk "NR==$nyhetsnr" | tr -d ',')
-    bilde=$(xq -x //item[$nyhetsnr]/media:content/@url /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    overskrift=$(xq -x //item[$nyhetsnr1]/title /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    kategori=$(xq -x //item[$nyhetsnr1]/category /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    tekst=$(xq -x //item[$nyhetsnr1]/description /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    lenke=$(xq -x //item[$nyhetsnr1]/link /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    tidspunkt=$(xq -x //item[$nyhetsnr1]/dc:date /tmp/breakingnews | tr -d ',') #| awk "NR==$nyhetsnr" | tr -d ',')
+    bilde=$(xq -x //item[$nyhetsnr1]/media:content/@url /tmp/breakingnews) #| awk "NR==$nyhetsnr")
 
-
-
+# quitter om nyheter er tomme:
+if [ -z "$tidspunkt" ]; then
+    return
+else
     #### printer hentet informasjon
     echo -e "\033[1;31mSISTE NYTT\033[0m"; date -d $tidspunkt
     echo -e "\033[4;37m\n$overskrift\n\033[0m" #| tr -d '"'
@@ -44,19 +46,20 @@ nyhetsnr=$((RANDOM % 10))
             kitty +kitten icat --align left $bilde &> /dev/null
         fi
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
+fi
 
-    sleep 30
+    sleep 1
 
 rm /tmp/breakingnews
 }
 
-if [ "$nyhetsnr" -eq 10 ];then
+if [ "$((nyhetsnr % 10))" -eq 0 ];then
         breakingnews
 fi
 
 # quitter om nyheter er tomme:
 if [ -z "$tidspunkt" ]; then
-    nyhetssak
+    breakingnews;nyhetssak
 fi
 
 
@@ -71,7 +74,7 @@ fi
         fi
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
 
-    sleep 30
+    sleep 1
 done
 
 
