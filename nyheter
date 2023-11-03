@@ -45,7 +45,7 @@ nyhetsnr=$((RANDOM % 10))
         fi
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
 
-    #sleep 30
+    sleep 30
 
 rm /tmp/breakingnews
 }
@@ -71,7 +71,7 @@ fi
         fi
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
 
-    #sleep 30
+    sleep 30
 done
 
 
