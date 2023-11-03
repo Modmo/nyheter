@@ -1,33 +1,81 @@
 #!/bin/bash
 
+nyhetssak() {
 #### laster ned informasjon
 curl -s https://www.nrk.no/toppsaker.rss -o /tmp/toppsaker
 
-nyhetssak() {
-for ((nyhetsnr=1; nyhetsnr <= 100; nyhetsnr++ )); do
+totalnews=$(xq -x /rss/channel/item/title /tmp/toppsaker | wc -l)
+
+
+for ((nyhetsnr=1; $totalnews <= 100; nyhetsnr++ )); do
     #### Henter div informasjon fra rss XML
-    overskrift=$(xq '.rss.channel.item[].title' /tmp/toppsaker | awk "NR==$nyhetsnr")
-    #kategori=$(xq '.rss.channel.item[].category' /tmp/toppsaker | awk "NR==$nyhetsnr")
-    tekst=$(xq '.rss.channel.item[].description' /tmp/toppsaker | awk "NR==$nyhetsnr")
-    lenke=$(xq '.rss.channel.item[].link' /tmp/toppsaker | awk "NR==$nyhetsnr")
-    tidspunkt=$(xq -r '.rss.channel.item[]."dc:date"' /tmp/toppsaker | awk "NR==$nyhetsnr" | tr -d ',')
-    bilde=$(xq -r '.rss.channel.item[]."media:content"."@url"' /tmp/toppsaker | awk "NR==$nyhetsnr")
-  
+    overskrift=$(xq -x //item[$nyhetsnr]/title /tmp/toppsaker) #| awk "NR==$nyhetsnr")
+    kategori=$(xq -x //item[$nyhetsnr]/category /tmp/toppsaker) #| awk "NR==$nyhetsnr")
+    tekst=$(xq -x //item[$nyhetsnr]/description /tmp/toppsaker) #| awk "NR==$nyhetsnr")
+    lenke=$(xq -x //item[$nyhetsnr]/link /tmp/toppsaker) #| awk "NR==$nyhetsnr")
+    tidspunkt=$(xq -x //item[$nyhetsnr]/dc:date /tmp/toppsaker | tr -d ',') #| awk "NR==$nyhetsnr" | tr -d ',')
+    bilde=$(xq -x //item[$nyhetsnr]/media:content/@url /tmp/toppsaker) #| awk "NR==$nyhetsnr")
+
+###BREAKINGNEWS
+breakingnews() {
+
+curl -s https://www.nrk.no/nyheter/siste.rss -o /tmp/breakingnews
+
+#get nyhetsnr
+nyhetsnr=$((RANDOM % 10))
+
+#### Henter div informasjon fra rss XML
+    overskrift=$(xq -x //item[$nyhetsnr]/title /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    kategori=$(xq -x //item[$nyhetsnr]/category /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    tekst=$(xq -x //item[$nyhetsnr]/description /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    lenke=$(xq -x //item[$nyhetsnr]/link /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    tidspunkt=$(xq -x //item[$nyhetsnr]/dc:date /tmp/breakingnews | tr -d ',') #| awk "NR==$nyhetsnr" | tr -d ',')
+    bilde=$(xq -x //item[$nyhetsnr]/media:content/@url /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+
+
+
     #### printer hentet informasjon
-    echo "NRK nyheter"; date -d $tidspunkt
-    echo -e "\n$overskrift\n" | tr -d '"'
-    echo -e "$tekst\n" | tr -d '"'
+    echo -e "\033[1;31mSISTE NYTT\033[0m"; date -d $tidspunkt
+    echo -e "\033[4;37m\n$overskrift\n\033[0m" #| tr -d '"'
+    echo -e "\033[0;37m$tekst\033[0m\n" #| tr -d '"'
+    echo -e "Temaer:\n$kategori"
     #### Hvis man har kitty, så får man graphics
         if [ -n "$KITTY_WINDOW_ID" ]; then
             kitty +kitten icat --align left $bilde &> /dev/null
         fi
-    echo -e "Kilde: $lenke\n" | tr -d '"'
+    echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
 
-    sleep 30
+    #sleep 30
+
+rm /tmp/breakingnews
+}
+
+if [ "$nyhetsnr" -eq 10 ];then
+        breakingnews
+fi
+
+# quitter om nyheter er tomme:
+if [ -z "$tidspunkt" ]; then
+    nyhetssak
+fi
+
+
+    #### printer hentet informasjon
+    echo -e "\033[1;34mNRK nyheter\033[0m"; date -d $tidspunkt
+    echo -e "\033[4;37m\n$overskrift\n\033[0m" #| tr -d '"'
+    echo -e "\033[0;37m$tekst\033[0m\n" #| tr -d '"'
+    echo -e "Temaer:\n$kategori"
+    #### Hvis man har kitty, så får man graphics
+        if [ -n "$KITTY_WINDOW_ID" ]; then
+            kitty +kitten icat --align left $bilde &> /dev/null
+        fi
+    echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
+
+    #sleep 30
 done
 
-rm /tmp/toppsaker
 
+rm /tmp/toppsaker
 }
 
 while true; do
