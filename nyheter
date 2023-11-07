@@ -14,7 +14,12 @@ for ((nyhetsnr=1; $totalnews <= 100; nyhetsnr++ )); do
     tekst=$(xq -x //item[$nyhetsnr]/description /tmp/toppsaker) #| awk "NR==$nyhetsnr")
     lenke=$(xq -x //item[$nyhetsnr]/link /tmp/toppsaker) #| awk "NR==$nyhetsnr")
     tidspunkt=$(xq -x //item[$nyhetsnr]/dc:date /tmp/toppsaker | tr -d ',') #| awk "NR==$nyhetsnr" | tr -d ',')
-    bilde=$(xq -x //item[$nyhetsnr]/media:content/@url /tmp/toppsaker) #| awk "NR==$nyhetsnr")
+    bilde=$(xq -x "//item[$nyhetsnr]/media:content/@url" /tmp/toppsaker) #| awk "NR==$nyhetsnr")
+
+####images:
+#
+curl -s $bilde > /tmp/toppsakraw.png
+magick /tmp/toppsakraw.png -resize 300x300^ /tmp/toppsak.png
 
 ###BREAKINGNEWS
 breakingnews() {
@@ -30,22 +35,23 @@ nyhetsnr1=$((RANDOM % 10))
     tekst=$(xq -x //item[$nyhetsnr1]/description /tmp/breakingnews) #| awk "NR==$nyhetsnr")
     lenke=$(xq -x //item[$nyhetsnr1]/link /tmp/breakingnews) #| awk "NR==$nyhetsnr")
     tidspunkt=$(xq -x //item[$nyhetsnr1]/dc:date /tmp/breakingnews | tr -d ',') #| awk "NR==$nyhetsnr" | tr -d ',')
-    bilde=$(xq -x //item[$nyhetsnr1]/media:content/@url /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+    bilde=$(xq -x "//item[$nyhetsnr1]/media:content/@url" /tmp/breakingnews) #| awk "NR==$nyhetsnr")
 
 # quitter om nyheter er tomme:
 if [ -z "$tidspunkt" ]; then
     return
 else
     #### printer hentet informasjon
-    echo -e "\033[1;31mSISTE NYTT\033[0m"; date -d $tidspunkt
+    echo -e "\n\033[1;31mSISTE NYTT\033[0m"; date -d $tidspunkt
     echo -e "\033[4;37m\n$overskrift\n\033[0m" #| tr -d '"'
     echo -e "\033[0;37m$tekst\033[0m\n" #| tr -d '"'
-    echo -e "Temaer:\n$kategori"
     #### Hvis man har kitty, så får man graphics
         if [ -n "$KITTY_WINDOW_ID" ]; then
-            kitty +kitten icat --place 600x300@0x0 $bilde &> /dev/null
+            kitty +kitten icat --align left /tmp/breaking.png #&> /dev/null
         fi
+    echo -e "Bildekilde: $bilde"
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
+    echo -e "Temaer:\n$kategori"
 fi
 
     sleep 30
@@ -64,19 +70,18 @@ fi
 
 
     #### printer hentet informasjon
-    echo -e "\033[1;34mNRK nyheter\033[0m"; date -d $tidspunkt
+    echo -e "\n\033[1;34mNRK nyheter\033[0m"; date -d $tidspunkt
     echo -e "\033[4;37m\n$overskrift\n\033[0m" #| tr -d '"'
     echo -e "\033[0;37m$tekst\033[0m\n" #| tr -d '"'
-    echo -e "Temaer:\n$kategori"
     #### Hvis man har kitty, så får man graphics
         if [ -n "$KITTY_WINDOW_ID" ]; then
-            kitty +kitten icat --align left $bilde &> /dev/null
+            kitty +kitten icat --align left /tmp/toppsak.png #&> /dev/null
         fi
+    echo -e "Bildekilde: $bilde"
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
-
+    echo -e "Temaer:\n$kategori"
     sleep 30
 done
-
 
 rm /tmp/toppsaker
 }
