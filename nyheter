@@ -43,7 +43,7 @@ else
     echo -e "Temaer:\n$kategori"
     #### Hvis man har kitty, så får man graphics
         if [ -n "$KITTY_WINDOW_ID" ]; then
-            kitty +kitten icat --align left $bilde &> /dev/null
+            kitty +kitten icat --place 600x300@0x0 $bilde &> /dev/null
         fi
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
 fi
