@@ -2,12 +2,11 @@
 
 nyhetssak() {
 #### laster ned informasjon
-curl -s https://www.nrk.no/toppsaker.rss -o /tmp/toppsaker
-
+curl -s https://www.nrk.no/nyheter/siste.rss -o /tmp/toppsaker
 totalnews=$(xq -x /rss/channel/item/title /tmp/toppsaker | wc -l)
 
 
-for ((nyhetsnr=1; $totalnews <= 100; nyhetsnr++ )); do
+for ((nyhetsnr=1; $nyhetsnr <= $totalnews; nyhetsnr++ )); do
     #### Henter div informasjon fra rss XML
     overskrift=$(xq -x //item[$nyhetsnr]/title /tmp/toppsaker) #| awk "NR==$nyhetsnr")
     kategori=$(xq -x //item[$nyhetsnr]/category /tmp/toppsaker) #| awk "NR==$nyhetsnr")
@@ -15,57 +14,17 @@ for ((nyhetsnr=1; $totalnews <= 100; nyhetsnr++ )); do
     lenke=$(xq -x //item[$nyhetsnr]/link /tmp/toppsaker) #| awk "NR==$nyhetsnr")
     tidspunkt=$(xq -x //item[$nyhetsnr]/dc:date /tmp/toppsaker | tr -d ',') #| awk "NR==$nyhetsnr" | tr -d ',')
     bilde=$(xq -x "//item[$nyhetsnr]/media:content/@url" /tmp/toppsaker) #| awk "NR==$nyhetsnr")
-
 ####images:
 #
-curl -s $bilde > /tmp/toppsakraw.png
-magick /tmp/toppsakraw.png -resize 300x300^ /tmp/toppsak.png
-
-###BREAKINGNEWS
-breakingnews() {
-
-curl -s https://www.nrk.no/nyheter/siste.rss -o /tmp/breakingnews
-
-#get nyhetsnr
-nyhetsnr1=$((RANDOM % 10))
-
-#### Henter div informasjon fra rss XML
-    overskrift=$(xq -x //item[$nyhetsnr1]/title /tmp/breakingnews) #| awk "NR==$nyhetsnr")
-    kategori=$(xq -x //item[$nyhetsnr1]/category /tmp/breakingnews) #| awk "NR==$nyhetsnr")
-    tekst=$(xq -x //item[$nyhetsnr1]/description /tmp/breakingnews) #| awk "NR==$nyhetsnr")
-    lenke=$(xq -x //item[$nyhetsnr1]/link /tmp/breakingnews) #| awk "NR==$nyhetsnr")
-    tidspunkt=$(xq -x //item[$nyhetsnr1]/dc:date /tmp/breakingnews | tr -d ',') #| awk "NR==$nyhetsnr" | tr -d ',')
-    bilde=$(xq -x "//item[$nyhetsnr1]/media:content/@url" /tmp/breakingnews) #| awk "NR==$nyhetsnr")
+if [ -n "$bilde" ]; then
+curl -s $bilde > /tmp/toppsakraw.png #2> /dev/null
+magick /tmp/toppsakraw.png -resize 300x300^ /tmp/toppsak.png #2> /dev/null
+fi
+#magick -background black -fill white -font Gecko -pointsize 16 -size 300x300 -gravity north caption:"$overskrift\n\n$tekst\n" /tmp/test.png
 
 # quitter om nyheter er tomme:
 if [ -z "$tidspunkt" ]; then
-    return
-else
-    #### printer hentet informasjon
-    echo -e "\n\033[1;31mSISTE NYTT\033[0m"; date -d $tidspunkt
-    echo -e "\033[4;37m\n$overskrift\n\033[0m" #| tr -d '"'
-    echo -e "\033[0;37m$tekst\033[0m\n" #| tr -d '"'
-    #### Hvis man har kitty, så får man graphics
-        if [ -n "$KITTY_WINDOW_ID" ]; then
-            kitty +kitten icat --align left /tmp/breaking.png #&> /dev/null
-        fi
-    echo -e "Bildekilde: $bilde"
-    echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
-    echo -e "Temaer:\n$kategori"
-fi
-
-    sleep 30
-
-rm /tmp/breakingnews
-}
-
-if [ "$((nyhetsnr % 10))" -eq 0 ];then
-        breakingnews
-fi
-
-# quitter om nyheter er tomme:
-if [ -z "$tidspunkt" ]; then
-    breakingnews;nyhetssak
+    nyhetssak
 fi
 
 
@@ -74,15 +33,25 @@ fi
     echo -e "\033[4;37m\n$overskrift\n\033[0m" #| tr -d '"'
     echo -e "\033[0;37m$tekst\033[0m\n" #| tr -d '"'
     #### Hvis man har kitty, så får man graphics
-        if [ -n "$KITTY_WINDOW_ID" ]; then
-            kitty +kitten icat --align left /tmp/toppsak.png #&> /dev/null
+        if [ -n "$KITTY_WINDOW_ID" ] && [ -n "$bilde" ]; then
+            kitty +kitten icat --align center /tmp/toppsak.png #2> /dev/null
+#	   kitty +kitten icat --align center /tmp/test.png
         fi
+	if [ -n "$bilde" ]; then
     echo -e "Bildekilde: $bilde"
+	fi
     echo -e "Kilde: '$lenke'\n\n" #| tr -d '"'
-    echo -e "Temaer:\n$kategori"
-    sleep 30
-done
+    #echo -e "Temaer:\n$kategori"
+sleep 10
 
+if [ -a /tmp/toppsakraw.png ]; then 
+	rm /tmp/toppsakraw.png
+elif [ -a /tmp/toppsak.png ]; then
+	rm /tmp/toppsak.png
+fi
+
+unset bilde
+done
 rm /tmp/toppsaker
 }
 
